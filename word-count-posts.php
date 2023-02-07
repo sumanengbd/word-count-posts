@@ -94,7 +94,7 @@ class WordCountPlugin {
         $html .= '</ul>';
         $html .= '</div>';
 
-        if ( get_option( 'wpc_location', '2' ) == '2' ) {
+        if ( get_option( 'wpc_location', '0' ) == '0' ) {
             return $html . $content;
         }
 
@@ -177,10 +177,8 @@ class WordCountPlugin {
     function wpc_location_html() {
         ?>
             <select name="wpc_location">
-                <option value="0" <?php selected( get_option( 'wpc_location' ), 0 ); ?>>Beginning of Title</option>
-                <option value="1" <?php selected( get_option( 'wpc_location' ), 1 ); ?>>End of Tilte</option>
-                <option value="2" <?php selected( get_option( 'wpc_location' ), 2 ); ?>>Beginning of Post</option>
-                <option value="3" <?php selected( get_option( 'wpc_location' ), 3 ); ?>>End of Post</option>
+                <option value="0" <?php selected( get_option( 'wpc_location' ), 0 ); ?>>Beginning of Post</option>
+                <option value="1" <?php selected( get_option( 'wpc_location' ), 1 ); ?>>End of Post</option>
             </select>    
         <?php
     }
