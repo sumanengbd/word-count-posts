@@ -1,0 +1,73 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: Word Count Posts\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2023-02-07 23:06+0000\n"
+"PO-Revision-Date: 2023-02-07 23:20+0000\n"
+"Last-Translator: \n"
+"Language-Team: বাংলা\n"
+"Language: bn_BD\n"
+"Plural-Forms: nplurals=2; plural=n != 1;\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Loco https://localise.biz/\n"
+"X-Loco-Version: 2.6.3; wp-6.1.1\n"
+"X-Domain: wcp"
+
+#. Description of the plugin
+msgid "A truly amazing plugin."
+msgstr "একটি সত্যিই আশ্চর্যজনক প্লাগইন."
+
+#: word-count-posts.php:85
+msgid "characters"
+msgstr "অক্ষর"
+
+#: word-count-posts.php:195
+msgid "Display location must be either beginning or end."
+msgstr "প্রদর্শনের অবস্থান অবশ্যই শুরু বা শেষ হতে হবে।"
+
+#. URI of the plugin
+#. Author URI of the plugin
+msgid "http://github.com/sumanengbd/"
+msgstr "http://github.com/sumanengbd/"
+
+#: word-count-posts.php:91
+msgid "minute"
+msgstr "মিনিট"
+
+#: word-count-posts.php:91
+msgid "minutes"
+msgstr "মিনিট"
+
+#. Author of the plugin
+msgid "Suman Ali"
+msgstr "সুমন আলী"
+
+#: word-count-posts.php:81 word-count-posts.php:85
+msgid "This post has"
+msgstr "এই পোস্ট আছে"
+
+#: word-count-posts.php:91
+msgid "This post will take about"
+msgstr "এই পোস্ট নিবে"
+
+#: word-count-posts.php:91
+msgid "to read"
+msgstr "পড়তে"
+
+#: word-count-posts.php:249
+msgid "Word Count"
+msgstr "শব্দ গণনা"
+
+#: word-count-posts.php:249
+msgid "Word Count Plugin Settings"
+msgstr "শব্দ গণনা প্লাগইন সেটিংস"
+
+#. Name of the plugin
+msgid "Word Count Posts"
+msgstr "পোস্ট এর শব্দ গণনা"
+
+#: word-count-posts.php:81
+msgid "words"
+msgstr "শব্দ"

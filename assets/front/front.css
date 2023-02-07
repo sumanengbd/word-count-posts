@@ -1,0 +1,53 @@
+.wcp_statistics .wcp_title {
+    font-weight: 700;
+}
+
+.wcp_statistics ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    margin-left: -12px;
+    margin-right: -12px;
+}
+
+.wcp_statistics ul li {
+    margin-left: 12px;
+    margin-right: 12px;
+    position: relative;
+    padding-left: 18px;
+    display: inline-block;
+}
+
+.wcp_statistics ul li:before {
+    left: 0;
+    top: 8px;
+    content: "";
+    width: 14px;
+    height: 14px;
+    position: absolute;
+    background-repeat: no-repeat;
+    background-position: center center;
+}
+
+.wcp_statistics ul li:not(:last-child):after {
+    top: 13px;
+    width: 5px;
+    height: 5px;
+    content: "";
+    right: -14px;
+    position: absolute;
+    background: #565656;
+    border-radius: 500px;
+}
+
+.wcp_statistics ul li.wpc_wordcount:before {
+    background-image: url(../images/word.svg);
+}
+
+.wcp_statistics ul li.wpc_charactercount:before {
+    background-image: url(../images/calculator.svg);
+}
+
+.wcp_statistics ul li.wpc_readtime:before {
+    background-image: url(../images/clock.svg);
+}
