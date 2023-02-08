@@ -10,11 +10,25 @@ Text Domain: wcp
 Domain Path: /languages
 */
 
-class WordCountPlugin {
+if ( ! defined( 'ABSPATH' ) ) {
+	exit; // Exit if accessed directly.
+}
 
+class WordCountPosts {
+
+    /**
+	 * The plugin version number.
+	 *
+	 **/
+	public $version = '1.0';
+
+    /**
+	 * The plugin construct function.
+	 *
+	 **/
     function __construct() {
         add_action( 'admin_menu', array($this, 'wcp_admin_page') );
-        add_action( 'admin_init', array( $this, 'wpc_settings' ) );
+        add_action( 'admin_init', array( $this, 'wcp_settings' ) );
         add_filter( 'the_content', array( $this, 'wcp_if_wraping' ) );
         add_action( 'init', array( $this, 'wcp_languages' ) );
 
@@ -34,8 +48,17 @@ class WordCountPlugin {
      * Load Admin Assets
      * 
      **/
-    function wcp_admin_assets() {
-        wp_enqueue_style( 'wcp-admin-style', plugins_url( 'assets/admin/admin.css', __FILE__ ), array(), '1.0.0', 'all' );
+    function wcp_admin_assets( $hook ) {
+        if ( 'settings_page_word-count-posts-settings' != $hook ) {
+            return;
+        }
+        // CSS File
+        wp_enqueue_style( 'wcp-admin-select2', plugins_url( 'assets/admin/css/select2.min.css', __FILE__ ), array(), $this->version, 'all' );
+        wp_enqueue_style( 'wcp-admin-style', plugins_url( 'assets/admin/css/admin.css', __FILE__ ), array(), $this->version, 'all' );
+        
+        // JavaScripts File
+        wp_enqueue_script( 'wcp-admin-select2', plugins_url( 'assets/admin/js/select2.min.js', __FILE__ ), array( 'jquery' ), $this->version, true );
+        wp_enqueue_script( 'wcp-admin-scripts', plugins_url( 'assets/admin/js/scripts.js', __FILE__ ), array( 'jquery' ), $this->version, true );
     }
 
     /** 
@@ -43,7 +66,7 @@ class WordCountPlugin {
      * 
      **/
     function wcp_frontend_assets() {
-        wp_enqueue_style( 'wcp-front-style', plugins_url( 'assets/front/front.css', __FILE__ ), array(), '1.0.0', 'all' );
+        wp_enqueue_style( 'wcp-front-style', plugins_url( 'assets/front/css/front.css', __FILE__ ), array(), $this->version, 'all' );
     }
 
     /** 
@@ -51,8 +74,10 @@ class WordCountPlugin {
      * 
      **/
     function wcp_if_wraping( $content ) {
+        $post_type = get_post_type();
+        $wcp_post_types = get_option( 'wcp_post_types', array() );
 
-        if ( is_main_query() && is_single() && (get_option( 'wcp_wordcount', 1 ) || get_option( 'wpc_charactercount', 1 ) || get_option( 'wpc_readtime', 1 )) ) {
+        if ( is_main_query() && in_array( $post_type, $wcp_post_types ) && (get_option( 'wcp_wordcount', 1 ) || get_option( 'wcp_charactercount', 1 ) || get_option( 'wcp_readtime', 1 )) ) {
             return $this->wcp_create_html($content);
         }
 
@@ -65,97 +90,111 @@ class WordCountPlugin {
      **/
     function wcp_create_html( $content ) {
 
+        $post_type = get_post_type();
+
         $html = '<div class="wcp_statistics">';
         
-        if ( get_option( 'wpc_headline' ) ) {
-            $html .= '<span class="wcp_title">' . esc_html( get_option( 'wpc_headline', 'Post Statistics' ), 'wcp' ) . '</span>';
+        if ( get_option( 'wcp_headline' ) ) {
+            $html .= '<span class="wcp_title">' . esc_html( get_option( 'wcp_headline', 'Post Statistics' ), 'wcp' ) . '</span>';
         }
 
         $html .= '<ul>';
         // get word count one because both wordcount and read time will need it.
-        if ( get_option( 'wpc_wordcount', '1' ) || get_option( 'wcp_readtime', '1' ) ) {
+        if ( get_option( 'wcp_wordcount', '1' ) || get_option( 'wcp_readtime', '1' ) ) {
             $word_count = str_word_count( strip_tags( $content ) );
         }
 
-        if ( get_option( 'wpc_wordcount' ) ) {
-            $html .= '<li class="wpc_wordcount">'.__( 'This post has', 'wcp' ).' <strong>' . $word_count . '</strong> '.__( 'words', 'wcp' ).'</li>';
+        if ( get_option( 'wcp_wordcount' ) ) {
+            $html .= '<li class="wcp_wordcount">'.sprintf( esc_html__( 'This %s has', 'wcp' ), $post_type ).' <strong>' . $word_count . '</strong> '.esc_html__( 'words', 'wcp' ).'</li>';
         }
 
-        if ( get_option( 'wpc_charactercount' ) ) {
-            $html .= '<li class="wpc_charactercount">'.__( 'This post has', 'wcp' ).' <strong>' . strlen( strip_tags( $content ) ) . '</strong> '.__( 'characters', 'wcp' ).'</li>';
+        if ( get_option( 'wcp_charactercount' ) ) {
+            $html .= '<li class="wcp_charactercount">'.sprintf( esc_html__( 'This %s has', 'wcp' ), $post_type ).' <strong>' . strlen( strip_tags( $content ) ) . '</strong> '.esc_html__( 'characters', 'wcp' ).'</li>';
         }
 
-        if ( get_option( 'wpc_readtime' ) ) {
-            $minutes = round( $word_count/225 );
+        if ( get_option( 'wcp_readtime' ) ) {
             
-            $html .= '<li class="wpc_readtime">'.__( 'This post will take about', 'wcp' ).' <strong>' . $minutes . '</strong> ' . ($minutes > 1 ? __( 'minutes', 'wcp' ) : __( 'minute', 'wcp' )) . ' '.__( 'to read', 'wcp' ).'.</li>';
+            $minutes = round( $word_count/189 );
+
+            $text = sprintf( esc_html__( 'This %s will take about', 'wcp' ), $post_type ) . ' <strong>' . ( $minutes <= 1 ? esc_html__( '<1', 'wcp' ) : $minutes ) . '</strong> ' . ($minutes > 1 ? esc_html__( 'minutes', 'wcp' ) : esc_html__( 'minute', 'wcp' )) . ' ' . esc_html__( 'to read', 'wcp' ) . '.';
+            $text = apply_filters( 'wcp_read_time_text', $text, $minutes );
+            
+            $html .= '<li class="wcp_readtime">' . $text . '</li>';
         }
 
         $html .= '</ul>';
         $html .= '</div>';
 
-        if ( get_option( 'wpc_location', '0' ) == '0' ) {
+        if ( get_option( 'wcp_location', '0' ) == '0' ) {
             return $html . $content;
         }
 
         return $content . $html;
     }
 
-    function wpc_settings() {
-        add_settings_section( 'wcp_first_section', null, null, 'word-count-plugin-settings' );
+    function wcp_settings() {
+        add_settings_section( 'wcp_first_section', null, null, 'word-count-posts-settings' );
 
         /** 
          * Post Type Field
          * 
          **/
-        add_settings_field( 'wpc_post_types', __( 'Post Type', 'wpc' ), array( $this, 'wpc_post_types_html' ), 'word-count-plugin-settings', 'wcp_first_section' );
-        register_setting( 'wordcountplugin', 'wpc_post_types', array( 'sanitize_callback' => 'sanitize_text_field', 'default' => '0' ) );
+        add_settings_field( 'wcp_post_types', esc_html__( 'Post Type', 'wcp' ), array( $this, 'wcp_post_types_html' ), 'word-count-posts-settings', 'wcp_first_section' );
+        register_setting( 'wordcountposts', 'wcp_post_types', array( 'sanitize_callback' => array( $this, 'wcp_sanitize_post_types' ), 'default' => 'post' ) );
+
+        /** 
+         * Display Specific Field
+         * 
+         **/
+        add_settings_field( 'wcp_display_posts', esc_html__( 'Display Specific', 'wcp' ), array( $this, 'wcp_display_posts_html' ), 'word-count-posts-settings', 'wcp_first_section' );
+        register_setting( 'wordcountposts', 'wcp_display_posts', array( 'sanitize_callback' => array( $this, 'wcp_sanitize_display_posts' ), 'default' => '' ) );
 
         /** 
          * Display Locations Field
          * 
          **/
-        add_settings_field( 'wpc_location', __( 'Display Locations', 'wpc' ), array( $this, 'wpc_location_html' ), 'word-count-plugin-settings', 'wcp_first_section' );
-        register_setting( 'wordcountplugin', 'wpc_location', array( 'sanitize_callback' => array( $this, 'wcp_sanitize_location' ), 'default' => '0' ) );
+        add_settings_field( 'wcp_location', esc_html__( 'Display Locations', 'wcp' ), array( $this, 'wcp_location_html' ), 'word-count-posts-settings', 'wcp_first_section' );
+        register_setting( 'wordcountposts', 'wcp_location', array( 'sanitize_callback' => array( $this, 'wcp_sanitize_location' ), 'default' => '0' ) );
 
         /** 
          * Headline Field
          * 
          **/
-        add_settings_field( 'wpc_headline', __( 'Headline Text', 'wpc' ), array( $this, 'wpc_headline_html' ), 'word-count-plugin-settings', 'wcp_first_section' );
-        register_setting( 'wordcountplugin', 'wpc_headline', array( 'sanitize_callback' => 'sanitize_text_field', 'default' => 'Post Statistics' ) );
+        add_settings_field( 'wcp_headline', esc_html__( 'Headline Text', 'wcp' ), array( $this, 'wcp_headline_html' ), 'word-count-posts-settings', 'wcp_first_section' );
+        register_setting( 'wordcountposts', 'wcp_headline', array( 'sanitize_callback' => 'sanitize_text_field', 'default' => 'Post Statistics' ) );
         
         /** 
          * Word Count Field
          * 
          **/
-        add_settings_field( 'wpc_wordcount', __( 'Word Count', 'wpc' ), array( $this, 'wcp_checkbox_html' ), 'word-count-plugin-settings', 'wcp_first_section', array( 'fieldName' => 'wpc_wordcount' ) );
-        register_setting( 'wordcountplugin', 'wpc_wordcount', array( 'sanitize_callback' => 'sanitize_text_field', 'default' => '1' ) );
+        add_settings_field( 'wcp_wordcount', esc_html__( 'Word Count', 'wcp' ), array( $this, 'wcp_checkbox_html' ), 'word-count-posts-settings', 'wcp_first_section', array( 'fieldName' => 'wcp_wordcount' ) );
+        register_setting( 'wordcountposts', 'wcp_wordcount', array( 'sanitize_callback' => 'sanitize_text_field', 'default' => '1' ) );
         
         /** 
          * Character Count Field
          * 
          **/
-        add_settings_field( 'wpc_charactercount', __( 'Character Count', 'wpc' ), array( $this, 'wcp_checkbox_html' ), 'word-count-plugin-settings', 'wcp_first_section', array( 'fieldName' => 'wpc_charactercount' ) );
-        register_setting( 'wordcountplugin', 'wpc_charactercount', array( 'sanitize_callback' => 'sanitize_text_field', 'default' => '1' ) );
+        add_settings_field( 'wcp_charactercount', esc_html__( 'Character Count', 'wcp' ), array( $this, 'wcp_checkbox_html' ), 'word-count-posts-settings', 'wcp_first_section', array( 'fieldName' => 'wcp_charactercount' ) );
+        register_setting( 'wordcountposts', 'wcp_charactercount', array( 'sanitize_callback' => 'sanitize_text_field', 'default' => '1' ) );
         
         /** 
          * Read Time Field
          * 
          **/
-        add_settings_field( 'wpc_readtime', __( 'Read Time', 'wpc' ), array( $this, 'wcp_checkbox_html' ), 'word-count-plugin-settings', 'wcp_first_section', array( 'fieldName' => 'wpc_readtime' ) );
-        register_setting( 'wordcountplugin', 'wpc_readtime', array( 'sanitize_callback' => 'sanitize_text_field', 'default' => '1' ) );
+        add_settings_field( 'wcp_readtime', esc_html__( 'Read Time', 'wcp' ), array( $this, 'wcp_checkbox_html' ), 'word-count-posts-settings', 'wcp_first_section', array( 'fieldName' => 'wcp_readtime' ) );
+        register_setting( 'wordcountposts', 'wcp_readtime', array( 'sanitize_callback' => 'sanitize_text_field', 'default' => '1' ) );
     }
 
     /** 
-     * Display Location HTML Select
+     * Display Post Type HTML Select
      * 
      **/
-    function wpc_post_types_html() {
+    function wcp_post_types_html() {
         $post_types = get_post_types( array( 'public' => true ), 'objects' );
+        $selected_post_types = get_option('wcp_post_types', array());
 
         ?>
-            <select name="wpc_post_types">
+            <select name="wcp_post_types[]" multiple="multiple" class="wcp-select2" data-placeholder="Select Post Types">
                 <?php
                     foreach ( $post_types as $post_type ) {
 
@@ -163,7 +202,7 @@ class WordCountPlugin {
                             continue;
                         }
 
-                        echo '<option value="' . $post_type->name . '" ' . selected( get_option( 'wcp_post_types' ), $post_type->name ) . '>' . $post_type->labels->singular_name . '</option>';
+                        echo '<option value="' . $post_type->name . '" ' . selected(in_array($post_type->name, $selected_post_types), true, false) . '>' . $post_type->labels->singular_name . '</option>';
                     }
                 ?>
             </select>    
@@ -171,14 +210,136 @@ class WordCountPlugin {
     }
 
     /** 
+     * Sanitize Post Type HTML Select
+     * 
+     **/
+    function wcp_sanitize_post_types( $input ) {
+
+        $post_types = get_post_types( array( 'public' => true ), 'objects' );
+        $post_types_list_pluck = wp_list_pluck( $post_types, 'label', 'name' );
+
+        if ( ! $input ) {
+            return get_option( 'wcp_post_types' );
+        }
+
+        if ( is_array( $input ) ) {
+            foreach ( $input as $post_type ) {
+                if ( ! array_key_exists( $post_type, $post_types_list_pluck ) ) {
+                    add_settings_error('wcp_post_types', 'wcp_post_types_error', esc_html__( 'The post type name must be one of the options provided in the lists.', 'wcp' ) );
+    
+                    return get_option( 'wcp_post_types' );
+                }
+            }
+        } elseif ( ! array_key_exists( $input, $post_types_list_pluck ) ) {
+            add_settings_error('wcp_post_types', 'wcp_post_types_error', esc_html__( 'The post type name must be one of the options provided in the lists.', 'wcp' ) );
+    
+            return get_option( 'wcp_post_types' );
+        }
+    
+        return $input;
+    }
+
+    /** 
+     * Display All Posts HTML Select
+     * 
+     **/
+    function wcp_display_posts_html() {
+
+        $selected_post_types = get_option('wcp_post_types', array());
+        $selected_wcp_display_posts = get_option('wcp_display_posts', array());
+
+        $all_post_ids = get_posts( array(
+            'post_type' => $selected_post_types,
+            'post_status' => 'publish',
+            'posts_per_page' => -1,
+            'fields' => 'ids',
+        ) );
+
+        echo "<pre>";
+        var_dump( $selected_post_types );
+        var_dump( $all_post_ids );
+        var_dump( $selected_wcp_display_posts );
+        // var_dump( selected(in_array( "0", $selected_wcp_display_posts ), true, false) );
+        echo "</pre>";
+        ?>
+            <select name="wcp_display_posts[]" multiple="multiple" class="wcp-select2" data-placeholder="Select Posts">
+                <?php
+                    if ( !empty( $selected_post_types ) && array_filter( $selected_post_types ) ) {  
+                        foreach ( $selected_post_types as $post_type ) {
+                            
+                            echo '<optgroup label="' . get_post_type_object( $post_type )->label . '">';
+                            
+                            $args = array(
+                                'post_type' => $post_type,
+                                'post_status' => 'publish',
+                                'posts_per_page' => -1
+                            );
+                            
+                            $posts = get_posts( $args );
+                            
+                            foreach ( $posts as $post ) {
+                                if ( empty ( $selected_wcp_display_posts ) ) {
+                                    echo '<option value="' . $post->ID . '">' . $post->post_title . '</option>';
+                                } else {
+                                    echo '<option value="' . $post->ID . '" ' . selected(in_array( $post->ID, $selected_wcp_display_posts), true, false) . '>' . $post->post_title . '</option>';
+                                }
+                            }
+                            
+                            echo '</optgroup>';
+                        }
+                    }
+                ?>
+            </select>    
+        <?php
+    }
+
+    /** 
+     * Sanitize Specific Post Type HTML Select
+     * 
+     **/
+    function wcp_sanitize_display_posts( $input ) {
+
+        $selected_post_types = get_option('wcp_post_types', array());
+
+        $all_post_ids = get_posts( array(
+            'post_type' => $selected_post_types,
+            'post_status' => 'publish',
+            'posts_per_page' => -1,
+            'fields' => 'ids',
+        ) );
+        var_dump( $input );
+
+        if ( ! $input ) {
+            return get_option( 'wcp_display_posts' );
+        }
+
+
+        if ( is_array( $input ) ) {
+            foreach ( $input as $post ) {
+                if ( ! array_key_exists( $post, $all_post_ids ) ) {
+                    add_settings_error('wcp_display_posts', 'wcp_display_posts_error', esc_html__( 'The post id must be one of the options provided in the lists.', 'wcp' ) );
+    
+                    return get_option( 'wcp_display_posts' );
+                }
+            }
+        } elseif ( ! array_key_exists( $input, $all_post_ids ) ) {
+            add_settings_error('wcp_display_posts', 'wcp_display_posts_error', esc_html__( 'The post id must be one of the options provided in the listsss.', 'wcp' ) );
+    
+            return get_option( 'wcp_display_posts' );
+        }
+    
+        return $input;
+    }
+
+    /** 
      * Display Location HTML Select
      * 
      **/
-    function wpc_location_html() {
+    function wcp_location_html() {
         ?>
-            <select name="wpc_location">
-                <option value="0" <?php selected( get_option( 'wpc_location' ), 0 ); ?>>Beginning of Post</option>
-                <option value="1" <?php selected( get_option( 'wpc_location' ), 1 ); ?>>End of Post</option>
+            <select name="wcp_location">
+                <option value="0" <?php selected( get_option( 'wcp_location' ), 0 ); ?>>Beginning of Post</option>
+                <option value="1" <?php selected( get_option( 'wcp_location' ), 1 ); ?>>End of Post</option>
             </select>    
         <?php
     }
@@ -189,10 +350,10 @@ class WordCountPlugin {
      **/
     function wcp_sanitize_location( $input ) {
 
-        if ( $input != '0' && $input != '1' && $input != '2' && $input != '3' ) {
-            add_settings_error('wpc_location', 'wcp_location_error', __( 'Display location must be either beginning or end.', 'wcp' ) );
+        if ( $input != '0' && $input != '1' ) {
+            add_settings_error('wcp_location', 'wcp_location_error', esc_html__( 'Display location must be either beginning or end.', 'wcp' ) );
 
-            return get_option( 'wpc_location' );
+            return get_option( 'wcp_location' );
         }
 
         return $input;
@@ -202,9 +363,9 @@ class WordCountPlugin {
      * Headline HTML Text Field
      * 
      **/
-    function wpc_headline_html() {
+    function wcp_headline_html() {
         ?>
-            <input type="text" name="wpc_headline" value="<?php echo esc_attr( get_option( 'wpc_headline' ) ); ?>">
+            <input type="text" name="wcp_headline" value="<?php echo esc_attr( get_option( 'wcp_headline' ) ); ?>">
         <?php
     }
 
@@ -219,21 +380,21 @@ class WordCountPlugin {
     }
 
     /*
-    function wpc_wordcount_html() {
+    function wcp_wordcount_html() {
         ?>
-            <input type="checkbox" name="wpc_wordcount" value="1" <?php checked( get_option( 'wpc_location' ), '1' ); ?>>
+            <input type="checkbox" name="wcp_wordcount" value="1" <?php checked( get_option( 'wcp_location' ), '1' ); ?>>
         <?php
     }
 
-    function wpc_charactercount_html() {
+    function wcp_charactercount_html() {
         ?>
-            <input type="checkbox" name="wpc_charactercount" value="1" <?php checked( get_option( 'wpc_charactercount' ), '1' ); ?>>
+            <input type="checkbox" name="wcp_charactercount" value="1" <?php checked( get_option( 'wcp_charactercount' ), '1' ); ?>>
         <?php
     }
 
-    function wpc_readtime_html() {
+    function wcp_readtime_html() {
         ?>
-            <input type="checkbox" name="wpc_readtime" value="1" <?php checked( get_option( 'wpc_readtime' ), '1' ); ?>>
+            <input type="checkbox" name="wcp_readtime" value="1" <?php checked( get_option( 'wcp_readtime' ), '1' ); ?>>
         <?php
     }
 
@@ -244,7 +405,7 @@ class WordCountPlugin {
      * 
      **/
     function wcp_admin_page() {
-        add_options_page( __('Word Count Plugin Settings', 'wcp' ), __('Word Count', 'wcp'), 'manage_options', 'word-count-plugin-settings', array( $this, 'wcp_settings_html' ) );
+        add_options_page( esc_html__('Word Count Plugin Settings', 'wcp' ), esc_html__('Word Count', 'wcp'), 'manage_options', 'word-count-posts-settings', array( $this, 'wcp_settings_html' ) );
     }
 
     /** 
@@ -253,14 +414,14 @@ class WordCountPlugin {
      **/
     function wcp_settings_html() {
         ?>
-        <div class="wrap wpc_wrap">
-            <h1><?php echo __( 'Word Count Settings', 'wpc' ); ?></h1>
+        <div class="wrap">
+            <h1><?php echo __( 'Word Count Posts Settings', 'wcp' ); ?></h1>
 
             <form action="options.php" method="POST">
                 <?php
-                    settings_fields( 'wordcountplugin' );
+                    settings_fields( 'wordcountposts' );
 
-                    do_settings_sections( 'word-count-plugin-settings' );
+                    do_settings_sections( 'word-count-posts-settings' );
                     
                     submit_button();
                 ?>
@@ -270,4 +431,4 @@ class WordCountPlugin {
     }
 }
 
-$wordCountPlugin = new WordCountPlugin();
+$WordCountPosts = new WordCountPosts();

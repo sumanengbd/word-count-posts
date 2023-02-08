@@ -30,24 +30,25 @@
 }
 
 .wcp_statistics ul li:not(:last-child):after {
-    top: 13px;
     width: 5px;
     height: 5px;
+    top: -2.5px;
     content: "";
     right: -14px;
-    position: absolute;
+    position: relative;
     background: #565656;
     border-radius: 500px;
+    display: inline-block;
 }
 
-.wcp_statistics ul li.wpc_wordcount:before {
+.wcp_statistics ul li.wcp_wordcount:before {
     background-image: url(../images/word.svg);
 }
 
-.wcp_statistics ul li.wpc_charactercount:before {
+.wcp_statistics ul li.wcp_charactercount:before {
     background-image: url(../images/calculator.svg);
 }
 
-.wcp_statistics ul li.wpc_readtime:before {
+.wcp_statistics ul li.wcp_readtime:before {
     background-image: url(../images/clock.svg);
 }
