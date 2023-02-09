@@ -4,3 +4,115 @@
     background: white;
     box-shadow: 0px 0px 6px 12px rgb(0 0 0 / 3%);
 }
+
+.wcp-input, .wcp-select {
+    width: 100%;
+    max-width: 50rem;
+}
+
+.wcp-input input[type=date], 
+.wcp-input input[type=datetime-local], 
+.wcp-input input[type=datetime], 
+.wcp-input input[type=email], 
+.wcp-input input[type=month], 
+.wcp-input input[type=number], 
+.wcp-input input[type=password], 
+.wcp-input input[type=search], 
+.wcp-input input[type=tel], 
+.wcp-input input[type=text], 
+.wcp-input input[type=time], 
+.wcp-input input[type=url], 
+.wcp-input input[type=week], 
+.wcp-select select {
+    width: 100%;
+    max-width: 100%;
+}
+
+.wcp-checkbox {
+    cursor: pointer;
+    position: relative;
+    display: inline-block;
+}
+
+.wcp-checkbox:before {
+    content: attr(data-prefix);
+}
+
+.wcp-checkbox:after {
+    content: attr(data-postfix);
+}
+
+.wcp-checkbox input[type=checkbox], 
+.wcp-checkbox input[type=radio] {
+    top: 3px;
+    border: 0;
+    outline: 0;
+    width: 30px;
+    height: 18px;
+    margin: 0 7px;
+    box-shadow: none;
+    position: relative;
+    border-radius: 500px;
+    display: inline-block;
+    background: #2271b1;
+    vertical-align: initial;
+}
+
+.wcp-checkbox input[type=checkbox]:before, 
+.wcp-checkbox input[type=radio]:before, 
+.wcp-checkbox input[type=checkbox]:after, 
+.wcp-checkbox input[type=radio]:after {
+    position: absolute;
+    content: "" !important;
+}
+
+.wcp-checkbox input[type=checkbox]:before, 
+.wcp-checkbox input[type=radio]:before {
+    top: 2px;
+    opacity: 1;
+    z-index: 1;
+    right: 2px;
+    width: 14px;
+    height: 14px;
+    display: block;
+    margin: initial;
+    border-radius: 500px;
+    background-color: #FFF;
+    transition: right 0.2s;
+}
+
+.wcp-checkbox input[type=checkbox]:after, 
+.wcp-checkbox input[type=radio]:after {
+    top: 3px;
+    left: 8px;
+    right: 8px;
+    font-size: 11px;
+    text-align: left;
+    font-weight: 700;
+    line-height: 13px;
+    font-style: normal;
+}
+
+.wcp-checkbox input[type=checkbox]:checked:after, 
+.wcp-checkbox input[type=radio]:checked:after {
+    text-align: right;
+}
+
+.wcp-checkbox input[type=checkbox]:checked:before, 
+.wcp-checkbox input[type=radio]:checked:before {
+    right: 14px;
+}
+
+.select2-container--default .select2-selection--multiple {
+    padding-bottom: 0;
+}
+
+.select2-container--default .select2-selection--multiple .select2-search--inline {
+    line-height: 2.1;
+    vertical-align: super;
+}
+
+.select2-container--default .select2-selection--multiple .select2-selection__choice__remove span {
+    position: relative;
+    top: -2px;
+}
