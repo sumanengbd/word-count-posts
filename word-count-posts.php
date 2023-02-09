@@ -85,17 +85,43 @@ class WordCountPosts {
     function wcp_settings_html() {
         ?>
         <div class="wrap">
-            <h1><?php echo __( 'Word Count Posts Settings', 'wcp' ); ?></h1>
+            <div class="wcp-header">
+                <div class="wcp-header__top">
+                    <div class="wcp-header__top-left">
+                        <span class="h1"><?php echo __( 'Word Count Posts Settings', 'wcp' ); ?></span>
+                    </div>
 
-            <form action="options.php" method="POST">
-                <?php
-                    settings_fields( 'wordcountposts' );
+                    <div class="wcp-header__top-right">
+                        <button id="wcp-settings-form-submit" class="button button-primary">Save Changes</button>
+                    </div>
+                </div>
 
-                    do_settings_sections( 'word-count-posts-settings' );
-                    
-                    submit_button();
-                ?>
-            </form>
+                <div class="wcp-header__bottom">
+                    <ul class="wcp-tab__nav">
+                        <li class="active"><a href="#basic-settings">Basic Settings</a></li>
+                        <li><a href="#layout-settings">Layout Settings</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="wcp-content">
+                <h1 class="wcp-hidden"></h1>
+                <form action="options.php" id="wcp-settings-form" method="POST">
+                    <div id="basic-settings" class="wcp-tab__content">
+                        <?php
+                            settings_fields( 'wordcountposts' );
+
+                            do_settings_sections( 'word-count-posts-settings' );
+                        ?>
+                    </div>
+
+                    <div id="layout-settings" class="wcp-tab__content">
+                        Test Tab 2
+                    </div>
+
+                    <?php submit_button(); ?>
+                </form>
+            </div>
         </div> 
         <?php
     }

@@ -1,8 +1,104 @@
-.wrap form {
-    padding:  4px 20px;
-    margin-top: 20px;
-    background: white;
-    box-shadow: 0px 0px 6px 12px rgb(0 0 0 / 3%);
+.wrap {
+    margin: 0;
+    padding: 0;
+    margin-left: -20px;
+}
+
+.wcp-hidden {
+    border: 0;
+    padding: 0;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    display: none;
+    overflow: hidden;
+    position: absolute;
+    clip-path: inset(50%);
+    clip: rect(1px,1px,1px,1px);
+    word-wrap: normal!important;
+}
+
+.wcp-header {
+    background-color: #FFFFFF;
+    border-bottom: 1px solid #DEE1E4;
+}
+
+.wcp-header__top {
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid #DEE1E4;
+}
+
+.wcp-header__top .h1 {
+    margin: 0;
+    padding: 0;
+    font-size: 23px;
+    font-weight: 400;
+}
+
+.wcp-header__bottom {
+    padding: 20px;
+}
+
+.wcp-content {
+    padding: 20px;
+}
+
+.wcp-tab__nav {
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    margin-left: -15px;
+    margin-right: -15px;
+}
+
+.wcp-tab__nav li {
+    margin: 0;
+    margin-left: 15px;
+    margin-right: 15px;
+}
+
+.wcp-tab__nav li a {
+    border: 0;
+    outline: 0;
+    box-shadow: none;
+    position: relative;
+    text-decoration: none;
+    transition: all 0.2s;
+}
+
+.wcp-tab__nav li a:before {
+    left: 0;
+    width: 0;
+    right: 0;
+    opacity: 0;
+    content: "";
+    height: 2px;
+    bottom: -21px;
+    margin-left: auto;
+    margin-right: auto;
+    position: absolute;
+    visibility: hidden;
+    background-color: currentColor;
+    transition: width 0.2s;
+}
+
+.wcp-tab__nav li.active a:before, 
+.wcp-tab__nav li:not(.active) a:hover:before {
+    opacity: 1;
+    width: 100%;
+    visibility: visible;
+}
+
+.wcp-tab__nav li:not(.active) a:not(:hover) {
+    color: #6B6B6B;
+}
+
+.wcp-tab__content {
+    display: none;
 }
 
 .wcp-input, .wcp-select {
