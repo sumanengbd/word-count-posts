@@ -31,6 +31,7 @@ class WordCountPosts {
         add_action( 'admin_menu', array($this, 'wcp_admin_page') );
         add_action( 'admin_init', array( $this, 'wcp_settings' ) );
         add_filter( 'the_content', array( $this, 'wcp_if_wraping' ) );
+        add_action('wp_footer', array($this, 'wcp_progress_bar_wraping'));
 
         // Load Admin CSS
         add_action( 'admin_enqueue_scripts', array( $this, 'wcp_admin_assets' ) );
@@ -50,6 +51,38 @@ class WordCountPosts {
 
                 add_filter( "manage_edit-{$post_type}_sortable_columns", array( $this, 'wcp_register_sortable_column' ) );
             }
+        }
+    }
+
+    /**
+     * Progress Bar HTML for Front-End
+     * 
+     */
+    function wcp_progress_bar_wraping() {
+        $options = [
+            'wcp_progress_bar' => '',
+            'wcp_progress_bar_background' => '#2271b1',
+            'wcp_progress_bar_foreground' => '#2271b1',
+            'wcp_progress_bar_thickness' => '3px',
+            'wcp_progress_bar_location' => '0',
+            'wcp_progress_bar_location_class' => ''
+        ];
+      
+        foreach ($options as $key => &$value) {
+            $value = get_option($key) ?: $value;
+        }
+      
+        if ( $options['wcp_progress_bar'] ) {
+            $location = [
+                '0' => 'top: 0; bottom: auto; position: fixed;',
+                '1' => 'top: auto; bottom: 0; position: fixed;',
+                '2' => 'top: 0; bottom: auto; position: absolute;'
+            ][$options['wcp_progress_bar_location']];
+          ?>
+            <div class="wcp-progress-wrap" style="background-color: <?php echo $options['wcp_progress_bar_background']; ?>; height: <?php echo $options['wcp_progress_bar_thickness']; ?>; <?php echo $location; ?>" <?php echo $options['wcp_progress_bar_location_class'] ? 'position-custom="'.$options['wcp_progress_bar_location_class'].'"' : ''; ?>>
+                <div class="wcp-progress-bar" style="background-color: <?php echo $options['wcp_progress_bar_foreground']; ?>;"></div>
+            </div>
+          <?php
         }
     }
 
@@ -183,7 +216,11 @@ class WordCountPosts {
      * 
      */
     function wcp_frontend_assets() {
+        // CSS File
         wp_enqueue_style( 'wcp-front-style', plugins_url( 'assets/front/css/front.css', __FILE__ ), array(), $this->version, 'all' );
+
+        // JavaScripts File
+        wp_enqueue_script( 'wcp-front-scripts', plugins_url( 'assets/front/js/scripts.js', __FILE__ ), array( 'jquery' ), $this->version, true );
     }
 
     /** 

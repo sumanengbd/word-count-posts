@@ -52,3 +52,18 @@
 .wcp_statistics ul li.wcp_readtime:before {
     background-image: url(../images/clock.svg);
 }
+
+/* progress */
+.wcp-progress-wrap {
+    left: 0;
+    width: 100%;
+    z-index: 99999;
+}
+
+.wcp-progress-wrap .wcp-progress-bar {
+    top: 0; 
+    left: 0; 
+    width: 0;
+    height: 100%; 
+    position: absolute; 
+}

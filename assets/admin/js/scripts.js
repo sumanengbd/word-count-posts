@@ -104,7 +104,6 @@
             }
         
             progressBarLocation.addEventListener('change', () => {
-                console.log(siblingTr);
                 if ( progressBarLocation.value == '2' ) {
                     siblingTr[0].style.display = 'table-row';
                 } else {
