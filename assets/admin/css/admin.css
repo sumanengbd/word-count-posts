@@ -1,4 +1,4 @@
-.wrap {
+.wrap.wcp-wrap  {
     margin: 0;
     padding: 0;
     margin-left: -20px;
@@ -211,4 +211,12 @@
 .select2-container--default .select2-selection--multiple .select2-selection__choice__remove span {
     position: relative;
     top: -2px;
+}
+
+#wcp_columns {
+    width: 10rem;
+}
+
+#layout-settings table tbody tr:not(:has([name=wcp_progress_bar])) {
+    display: none;
 }

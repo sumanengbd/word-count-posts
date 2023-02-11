@@ -19,13 +19,13 @@ class WordCountPosts {
     /**
 	 * The plugin version number.
 	 *
-	 **/
+	 */
 	public $version = '1.0';
 
     /**
 	 * The plugin construct function.
 	 *
-	 **/
+	 */
     function __construct() {
         add_action( 'init', array( $this, 'init' ) );
         add_action( 'admin_menu', array($this, 'wcp_admin_page') );
@@ -35,29 +35,145 @@ class WordCountPosts {
         // Load Admin CSS
         add_action( 'admin_enqueue_scripts', array( $this, 'wcp_admin_assets' ) );
         add_action( 'wp_enqueue_scripts', array( $this, 'wcp_frontend_assets' ) );
+
+
+        // Selected Post Type Admin Column
+        $wcp_post_types = get_option( 'wcp_post_types', array() );
+
+        if ( !empty( $wcp_post_types ) ) {
+            add_action( 'pre_get_posts', array( $this, 'wcp_sort_posts_by_word_count' ) );
+            add_action('save_post', array ( $this, 'wcp_set_meta_save' ));
+
+            foreach ( $wcp_post_types as $post_type ) {
+                add_filter( "manage_{$post_type}_posts_columns", array( $this, 'wcp_post_type_columns' ) );
+                add_action( "manage_{$post_type}_posts_custom_column", array( $this, 'wcp_post_type_columns_rows' ), 10, 2 );
+
+                add_filter( "manage_edit-{$post_type}_sortable_columns", array( $this, 'wcp_register_sortable_column' ) );
+            }
+        }
+    }
+
+    /**
+     * Register Admin Column Post Type
+     * 
+     */
+    function wcp_post_type_columns( $original_columns ) {
+        $new_columns = $original_columns;
+        array_splice( $new_columns, -1, 1 );
+        $new_columns['wcp_columns'] = esc_html__( 'Word Count', 'wcp' );
+        return array_merge( $new_columns, $original_columns );
+    }
+
+    function wcp_post_type_columns_rows( $column_name, $post_id ) {
+        $html = '';
+        $content = get_post_field( 'post_content', $post_id );
+
+        if ( get_option( 'wcp_wordcount' ) || get_option( 'wcp_readtime' ) ) {
+            $word_count = str_word_count( strip_tags( $content ) );
+        }
+
+        if ( get_option( 'wcp_wordcount' ) ) {
+            $html .= sprintf( esc_html__( 'Words - %s', 'wcp' ), $word_count ) . '<br>';
+        }
+
+        if ( get_option( 'wcp_charactercount' ) ) {
+            $html .= sprintf( esc_html__( 'Characters - %s', 'wcp' ), strlen( strip_tags( $content ) ) ) . '<br>';
+        }
+
+        if ( get_option( 'wcp_readtime' ) ) {
+            
+            $minutes = round( $word_count/189 );
+
+            $text = ( $minutes <= 1 ? esc_html__( '<1', 'wcp' ) : $minutes ) . ' ' . ( $minutes > 1 ? esc_html__( 'minutes', 'wcp' ) : esc_html__( 'minute', 'wcp' ) );
+            
+            $html .= sprintf( esc_html__( 'Time - %s', 'wcp' ), $text ) ;
+        }
+
+        if ( 'wcp_columns' === $column_name ) {
+            echo $html;
+        }
+    }
+
+    /**
+     * Column Sorting
+     */
+    function wcp_register_sortable_column( $columns ) {
+        $columns['wcp_columns'] = 'wcp_word_number';
+        return $columns;
+    }
+    
+    /**
+     * Post sort query for words
+     */
+    function wcp_sort_posts_by_word_count( $query ) {
+        if ( ! is_admin() ) {
+          return;
+        }
+    
+        $orderby = $query->get( 'orderby' );
+    
+        if ( 'wcp_word_number' === $orderby ) {
+          $query->set( 'meta_key', 'wcp_word_number' );
+          $query->set( 'orderby', 'meta_value_num' );
+        }
+    }
+
+    /**
+     * Update meta init Function Inside
+     */
+    function wcp_set_meta() {
+        $wcp_post_types = get_option( 'wcp_post_types', array() );
+
+        $selected_posts = get_posts( array(
+            'posts_per_page' => - 1,
+            'post_status'    => 'any',
+            'post_type'      => $wcp_post_types,
+        ) );
+
+        foreach ( $selected_posts as $post ) {
+            $content = $post->post_content;
+            $word_number   = str_word_count( strip_tags( $content ) );
+            update_post_meta( $post->ID, 'wcp_word_number', $word_number );
+        }
+    }
+
+    /**
+     * Update meta on save
+     */
+    function wcp_set_meta_save($post_id){
+        $post = get_post( $post_id );
+        $content = $post->post_content;
+        $word_number = str_word_count( strip_tags( $content ) );
+        update_post_meta( $post->ID, 'wcp_word_number', $word_number );
     }
 
     /** 
      * init Function
      * 
-     **/
+     */
     function init() {
         load_plugin_textdomain( 'wcp', false, dirname( plugin_basename( __FILE__ ) ) . '/languages' );
+
+        // update post meta for Admin Column
+        $this->wcp_set_meta();
     }
 
     /** 
      * Load Admin Assets
      * 
-     **/
+     */
     function wcp_admin_assets( $hook ) {
-        if ( 'settings_page_word-count-posts-settings' != $hook ) {
-            return;
-        }
+        // if ( 'settings_page_word-count-posts-settings' != $hook ) {
+        //     return;
+        // }
+        
         // CSS File
+        wp_enqueue_style( 'wp-color-picker' );
         wp_enqueue_style( 'wcp-admin-select2', plugins_url( 'assets/admin/css/select2.min.css', __FILE__ ), array(), $this->version, 'all' );
         wp_enqueue_style( 'wcp-admin-style', plugins_url( 'assets/admin/css/admin.css', __FILE__ ), array(), $this->version, 'all' );
         
         // JavaScripts File
+        wp_enqueue_script( 'wp-color-picker' );
         wp_enqueue_script( 'wcp-admin-select2', plugins_url( 'assets/admin/js/select2.min.js', __FILE__ ), array( 'jquery' ), $this->version, true );
         wp_enqueue_script( 'wcp-admin-scripts', plugins_url( 'assets/admin/js/scripts.js', __FILE__ ), array( 'jquery' ), $this->version, true );
     }
@@ -65,7 +181,7 @@ class WordCountPosts {
     /** 
      * Load Frontend Assets
      * 
-     **/
+     */
     function wcp_frontend_assets() {
         wp_enqueue_style( 'wcp-front-style', plugins_url( 'assets/front/css/front.css', __FILE__ ), array(), $this->version, 'all' );
     }
@@ -73,7 +189,7 @@ class WordCountPosts {
     /** 
      * Register Word Count Setting Under Admin Setting Menu
      * 
-     **/
+     */
     function wcp_admin_page() {
         add_options_page( esc_html__('Word Count Plugin Settings', 'wcp' ), esc_html__('Word Count', 'wcp'), 'manage_options', 'word-count-posts-settings', array( $this, 'wcp_settings_html' ) );
     }
@@ -81,42 +197,45 @@ class WordCountPosts {
     /** 
      * Word Count Settings Form
      * 
-     **/
+     */
     function wcp_settings_html() {
         ?>
-        <div class="wrap">
+        <div class="wrap wcp-wrap">
             <div class="wcp-header">
                 <div class="wcp-header__top">
                     <div class="wcp-header__top-left">
-                        <span class="h1"><?php echo __( 'Word Count Posts Settings', 'wcp' ); ?></span>
+                        <span class="h1"><?php echo esc_html__( 'Word Count Posts Settings', 'wcp' ); ?></span>
                     </div>
 
                     <div class="wcp-header__top-right">
-                        <button id="wcp-settings-form-submit" class="button button-primary">Save Changes</button>
+                        <button type="button" id="wcp-form-submit-button" class="button button-primary"><?php echo esc_html__( 'Save Changes', 'wcp'); ?></button>
                     </div>
                 </div>
 
                 <div class="wcp-header__bottom">
                     <ul class="wcp-tab__nav">
-                        <li class="active"><a href="#basic-settings">Basic Settings</a></li>
-                        <li><a href="#layout-settings">Layout Settings</a></li>
+                        <li class="active"><a href="#basic-settings"><?php echo esc_html__( 'Basic Settings', 'wcp'); ?></a></li>
+                        <li><a href="#layout-settings"><?php echo esc_html__( 'Layout Settings', 'wcp'); ?></a></li>
                     </ul>
                 </div>
             </div>
 
             <div class="wcp-content">
                 <h1 class="wcp-hidden"></h1>
-                <form action="options.php" id="wcp-settings-form" method="POST">
+                <form action="options.php" id="wcp-form" method="POST">
+                    <?php 
+                        settings_fields( 'wordcountposts' ); 
+                    ?>
                     <div id="basic-settings" class="wcp-tab__content">
                         <?php
-                            settings_fields( 'wordcountposts' );
-
                             do_settings_sections( 'word-count-posts-settings' );
                         ?>
                     </div>
 
                     <div id="layout-settings" class="wcp-tab__content">
-                        Test Tab 2
+                        <?php 
+                            do_settings_sections( 'word-count-posts-settings-layout' );
+                        ?>
                     </div>
 
                     <?php submit_button(); ?>
@@ -129,7 +248,7 @@ class WordCountPosts {
     /** 
      * Check Settings and Content Return
      * 
-     **/
+     */
     function wcp_if_wraping( $content ) {
         $post_type = get_post_type();
         $currentPageId = get_queried_object_id();
@@ -157,7 +276,7 @@ class WordCountPosts {
     /** 
      * Word Count New Content Return
      * 
-     **/
+     */
     function wcp_create_html( $content ) {
 
         $post_type = get_post_type();
@@ -205,7 +324,7 @@ class WordCountPosts {
     /** 
      * Load Admin Settings
      * 
-     **/
+     */
     function wcp_settings() {
         require_once( plugin_dir_path( __FILE__ ) . 'includes/admin/settings.php' );
     }
@@ -213,7 +332,7 @@ class WordCountPosts {
     /** 
      * Display Post Type HTML Select
      * 
-     **/
+     */
     function wcp_post_types_html() {
         $post_types = get_post_types( array( 'public' => true ), 'objects' );
         $selected_post_types = get_option('wcp_post_types', array());
@@ -243,7 +362,7 @@ class WordCountPosts {
     /** 
      * Sanitize Post Type HTML Select
      * 
-     **/
+     */
     function wcp_sanitize_post_types( $input ) {
 
         $post_types = get_post_types( array( 'public' => true ), 'objects' );
@@ -269,7 +388,7 @@ class WordCountPosts {
     /** 
      * Display All Posts HTML Select
      * 
-     **/
+     */
     function wcp_display_posts_html() {
 
         $selected_post_types = get_option('wcp_post_types', array());
@@ -312,7 +431,7 @@ class WordCountPosts {
                     ?>
                 </select> 
 
-                <p class="description">If you choose a specific item from the 'Display Specific' option, it will not be displayed on all pages of the selected 'Post Type'. If you don't make a selection, it will appear on all pages of the chosen 'Post Type'.</p>
+                <p class="description"><?php echo esc_html__( 'If you choose a specific item from the \'Display Specific\' option, it will not be displayed on all pages of the selected \'Post Type\'. If you don\'t make a selection, it will appear on all pages of the chosen \'Post Type\'.', 'wcp'); ?></p>
             </div>   
         <?php
     }
@@ -320,7 +439,7 @@ class WordCountPosts {
     /** 
      * Sanitize Specific Post Type HTML Select
      * 
-     **/
+     */
     function wcp_sanitize_display_posts( $input ) {
 
         $selected_post_types = get_option('wcp_post_types', array());
@@ -352,13 +471,13 @@ class WordCountPosts {
     /** 
      * Display Location HTML Select
      * 
-     **/
+     */
     function wcp_location_html() {
         ?>
             <div class="wcp-select">
                 <select name="wcp_location">
-                    <option value="0" <?php selected( get_option( 'wcp_location' ), 0 ); ?>>Beginning of Post</option>
-                    <option value="1" <?php selected( get_option( 'wcp_location' ), 1 ); ?>>End of Post</option>
+                    <option value="0" <?php selected( get_option( 'wcp_location' ), 0 ); ?>><?php echo esc_html__( 'Beginning of Post', 'wcp'); ?></option>
+                    <option value="1" <?php selected( get_option( 'wcp_location' ), 1 ); ?>><?php echo esc_html__( 'End of Post', 'wcp'); ?></option>
                 </select>    
             </div>
         <?php
@@ -367,7 +486,7 @@ class WordCountPosts {
     /** 
      * Sanitize Display Location HTML Select
      * 
-     **/
+     */
     function wcp_sanitize_location( $input ) {
 
         if ( $input != '0' && $input != '1' ) {
@@ -382,11 +501,11 @@ class WordCountPosts {
     /** 
      * Headline HTML Text Field
      * 
-     **/
+     */
     function wcp_headline_html() {
         ?>  
             <div class="wcp-input">
-                <input type="text" name="wcp_headline" value="<?php echo esc_attr( get_option( 'wcp_headline' ) ); ?>">
+                <input type="text" name="wcp_headline" value="<?php echo esc_html__( get_option( 'wcp_headline' ), 'wcp' ); ?>">
             </div>
         <?php
     }
@@ -394,10 +513,78 @@ class WordCountPosts {
     /** 
      * Dynamic Checkbox Function for all Checkbox Field
      * 
-     **/
+     */
     function wcp_checkbox_html( $args ) {
         ?>
-            <label class="wcp-checkbox" data-prefix="Yes" data-postfix="No"><input type="checkbox" name="<?php echo $args['fieldName']; ?>" value="1" <?php checked( get_option( $args['fieldName'] ), '1' ); ?>></label>
+            <label class="wcp-checkbox" data-prefix="<?php echo esc_html__( 'Yes', 'wcp'); ?>" data-postfix="<?php echo esc_html__( 'No', 'wcp'); ?>"><input type="checkbox" name="<?php echo $args['fieldName']; ?>" <?php echo !empty( $args['fieldID'] ) && array_key_exists( 'fieldID', $args ) ? 'id="'.$args['fieldID'].'"' : ''; ?> value="1" <?php checked( get_option( $args['fieldName'] ), '1' ); ?>></label>
+        <?php
+    }
+
+    /** 
+     * Progress Bar Display Location HTML Select
+     * 
+     */
+    function wcp_progress_bar_location_html() {
+        ?>
+            <div class="wcp-select">
+                <select name="wcp_progress_bar_location">
+                    <option value="0" <?php selected( get_option( 'wcp_progress_bar_location' ), 0 ); ?>><?php echo esc_html__( 'Top', 'wcp'); ?></option>
+                    <option value="1" <?php selected( get_option( 'wcp_progress_bar_location' ), 1 ); ?>><?php echo esc_html__( 'Bottom', 'wcp'); ?></option>
+                    <option value="2" <?php selected( get_option( 'wcp_progress_bar_location' ), 2 ); ?>><?php echo esc_html__( 'Custom', 'wcp'); ?></option>
+                </select>    
+            </div>
+        <?php
+    }
+
+    /** 
+     * Sanitize Progress Bar Display Location HTML Select
+     * 
+     */
+    function wcp_sanitize_progress_bar_location( $input ) {
+
+        if ( $input != '0' && $input != '1' && $input != '2' ) {
+            add_settings_error('wcp_progress_bar_location', 'wcp_progress_bar_location_error', esc_html__( 'Progress Bar Display Locations must be Top, Bottom or Custom.', 'wcp' ) );
+
+            return get_option( 'wcp_progress_bar_location' );
+        }
+
+        return $input;
+    }
+
+    /** 
+     * Progress Bar Background HTML Field
+     * 
+     */
+    function wcp_color_picker_html( $args ) {
+        ?>  
+            <div class="wcp-input">
+                <input type="text" name="<?php echo $args['fieldName']; ?>" <?php echo !empty( $args['fieldID'] ) && array_key_exists( 'fieldID', $args ) ? 'id="'.$args['fieldID'].'"' : ''; ?> class="wcp_color_picker" value="<?php echo esc_html__( get_option( $args['fieldName'] ), 'wcp' ); ?>">
+            </div>
+        <?php
+    }
+
+    /** 
+     * Progress Bar Thickness HTML Field
+     * 
+     */
+    function wcp_progress_bar_thickness_html( $args ) {
+        ?>  
+            <div class="wcp-input">
+                <input type="number" name="wcp_progress_bar_thickness" value="<?php echo esc_html__( get_option( 'wcp_progress_bar_thickness' ), 'wcp' ); ?>">
+            </div>
+        <?php
+    }
+
+    /** 
+     * Progress Bar Location Class HTML Field
+     * 
+     */
+    function wcp_progress_bar_location_class_html( $args ) {
+        ?>  
+            <div class="wcp-input">
+                <input type="text" name="wcp_progress_bar_location_class" value="<?php echo esc_html__( get_option( 'wcp_progress_bar_location_class' ), 'wcp' ); ?>">
+                <p class="description"><?php echo sprintf( esc_html__( 'Save the class or ID of the desired location for the progress bar, using either a period (%s) followed by the class name or a hash (%s) symbol followed by the ID. The field for entering this information is located above.', 'wcp'), '<code>.ClassName</code>', '<code>#YourID</code>' ); ?></p>
+            </div>
         <?php
     }
 }

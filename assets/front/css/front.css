@@ -4,10 +4,10 @@
 
 .wcp_statistics ul {
     margin: 0;
-    padding: 0;
     list-style: none;
     margin-left: -12px;
     margin-right: -12px;
+    padding: 0 !important;
 }
 
 .wcp_statistics ul li {
