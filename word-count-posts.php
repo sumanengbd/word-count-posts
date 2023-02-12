@@ -37,7 +37,6 @@ class WordCountPosts {
         add_action( 'admin_enqueue_scripts', array( $this, 'wcp_admin_assets' ) );
         add_action( 'wp_enqueue_scripts', array( $this, 'wcp_frontend_assets' ) );
 
-
         // Selected Post Type Admin Column
         $wcp_post_types = get_option( 'wcp_post_types', array() );
 
@@ -59,30 +58,25 @@ class WordCountPosts {
      * 
      */
     function wcp_progress_bar_wraping() {
-        $options = [
-            'wcp_progress_bar' => '',
-            'wcp_progress_bar_background' => '#2271b1',
-            'wcp_progress_bar_foreground' => '#2271b1',
-            'wcp_progress_bar_thickness' => '3px',
-            'wcp_progress_bar_location' => '0',
-            'wcp_progress_bar_location_class' => ''
-        ];
-      
-        foreach ($options as $key => &$value) {
-            $value = get_option($key) ?: $value;
-        }
-      
-        if ( $options['wcp_progress_bar'] ) {
-            $location = [
-                '0' => 'top: 0; bottom: auto; position: fixed;',
-                '1' => 'top: auto; bottom: 0; position: fixed;',
-                '2' => 'top: 0; bottom: auto; position: absolute;'
-            ][$options['wcp_progress_bar_location']];
-          ?>
-            <div class="wcp-progress-wrap" style="background-color: <?php echo $options['wcp_progress_bar_background']; ?>; height: <?php echo $options['wcp_progress_bar_thickness']; ?>; <?php echo $location; ?>" <?php echo $options['wcp_progress_bar_location_class'] ? 'position-custom="'.$options['wcp_progress_bar_location_class'].'"' : ''; ?>>
-                <div class="wcp-progress-bar" style="background-color: <?php echo $options['wcp_progress_bar_foreground']; ?>;"></div>
-            </div>
-          <?php
+        $currentPageId = get_queried_object_id();
+        $post_type = get_post_type( $currentPageId );
+    
+        // check if a post type is available for the current page
+        if (!empty($post_type)) {
+            $wcp_post_types = get_option( 'wcp_post_types', array() );
+            $wcp_display_posts = get_option( 'wcp_display_posts', array() );
+    
+            // check if both options are available
+            if (!empty($wcp_post_types) && !empty($wcp_display_posts)) {
+                if (in_array($post_type, $wcp_post_types) && in_array($currentPageId, $wcp_display_posts)) {
+                    include_once( plugin_dir_path( __FILE__ ) . 'includes/front/progress-bar.php' );
+                }
+            } else if (!empty($wcp_post_types)) {
+                // only check for post type if wcp_display_posts is not available
+                if (in_array($post_type, $wcp_post_types)) {
+                    include_once( plugin_dir_path( __FILE__ ) . 'includes/front/progress-bar.php' );
+                }
+            }
         }
     }
 
@@ -252,6 +246,7 @@ class WordCountPosts {
                 <div class="wcp-header__bottom">
                     <ul class="wcp-tab__nav">
                         <li class="active"><a href="#basic-settings"><?php echo esc_html__( 'Basic Settings', 'wcp'); ?></a></li>
+                        <li><a href="#progress-settings"><?php echo esc_html__( 'Progress Settings', 'wcp'); ?></a></li>
                         <li><a href="#layout-settings"><?php echo esc_html__( 'Layout Settings', 'wcp'); ?></a></li>
                     </ul>
                 </div>
@@ -266,6 +261,12 @@ class WordCountPosts {
                     <div id="basic-settings" class="wcp-tab__content">
                         <?php
                             do_settings_sections( 'word-count-posts-settings' );
+                        ?>
+                    </div>
+
+                    <div id="progress-settings" class="wcp-tab__content">
+                        <?php 
+                            do_settings_sections( 'word-count-posts-settings-progress' );
                         ?>
                     </div>
 
@@ -287,12 +288,12 @@ class WordCountPosts {
      * 
      */
     function wcp_if_wraping( $content ) {
-        $post_type = get_post_type();
         $currentPageId = get_queried_object_id();
+        $post_type = get_post_type( $currentPageId );
         $wcp_post_types = get_option( 'wcp_post_types', array() );
         $wcp_display_posts = get_option( 'wcp_display_posts', array() );
 
-        if ( is_main_query() && (get_option( 'wcp_wordcount', 1 ) || get_option( 'wcp_charactercount', 1 ) || get_option( 'wcp_readtime', 1 )) ) 
+        if ( is_main_query() && !is_home() && (get_option( 'wcp_wordcount', 1 ) || get_option( 'wcp_charactercount', 1 ) || get_option( 'wcp_readtime', 1 )) ) 
         {   
             if (empty($wcp_post_types)) {
                 return $content;
@@ -315,8 +316,8 @@ class WordCountPosts {
      * 
      */
     function wcp_create_html( $content ) {
-
-        $post_type = get_post_type();
+        $currentPageId = get_queried_object_id();
+        $post_type = get_post_type( $currentPageId );
 
         $html = '<div class="wcp_statistics">';
         
@@ -558,6 +559,30 @@ class WordCountPosts {
     }
 
     /** 
+     * Progress Bar Background HTML Field
+     * 
+     */
+    function wcp_color_picker_html( $args ) {
+        ?>  
+            <div class="wcp-input">
+                <input type="text" name="<?php echo $args['fieldName']; ?>" <?php echo !empty( $args['fieldID'] ) && array_key_exists( 'fieldID', $args ) ? 'id="'.$args['fieldID'].'"' : ''; ?> class="wcp_color_picker" value="<?php echo esc_html__( get_option( $args['fieldName'] ), 'wcp' ); ?>">
+            </div>
+        <?php
+    }
+
+    /** 
+     * Progress Bar Thickness HTML Field
+     * 
+     */
+    function wcp_progress_bar_thickness_html( $args ) {
+        ?>  
+            <div class="wcp-input">
+                <input type="number" name="wcp_progress_bar_thickness" value="<?php echo esc_html__( get_option( 'wcp_progress_bar_thickness' ), 'wcp' ); ?>">
+            </div>
+        <?php
+    }
+
+    /** 
      * Progress Bar Display Location HTML Select
      * 
      */
@@ -589,27 +614,33 @@ class WordCountPosts {
     }
 
     /** 
-     * Progress Bar Background HTML Field
+     * Progress Bar Locations Position HTML Select
      * 
      */
-    function wcp_color_picker_html( $args ) {
-        ?>  
-            <div class="wcp-input">
-                <input type="text" name="<?php echo $args['fieldName']; ?>" <?php echo !empty( $args['fieldID'] ) && array_key_exists( 'fieldID', $args ) ? 'id="'.$args['fieldID'].'"' : ''; ?> class="wcp_color_picker" value="<?php echo esc_html__( get_option( $args['fieldName'] ), 'wcp' ); ?>">
+    function wcp_progress_bar_location_position_html() {
+        ?>
+            <div class="wcp-select">
+                <select name="wcp_progress_bar_location_position">
+                    <option value="0" <?php selected( get_option( 'wcp_progress_bar_location_position' ), 0 ); ?>><?php echo esc_html__( 'Top', 'wcp'); ?></option>
+                    <option value="1" <?php selected( get_option( 'wcp_progress_bar_location_position' ), 1 ); ?>><?php echo esc_html__( 'Bottom', 'wcp'); ?></option>
+                </select>    
             </div>
         <?php
     }
 
     /** 
-     * Progress Bar Thickness HTML Field
+     * Sanitize Progress Bar Locations Position HTML Select
      * 
      */
-    function wcp_progress_bar_thickness_html( $args ) {
-        ?>  
-            <div class="wcp-input">
-                <input type="number" name="wcp_progress_bar_thickness" value="<?php echo esc_html__( get_option( 'wcp_progress_bar_thickness' ), 'wcp' ); ?>">
-            </div>
-        <?php
+    function wcp_sanitize_progress_bar_location_position( $input ) {
+
+        if ( $input != '0' && $input != '1' ) {
+            add_settings_error('wcp_progress_bar_location_position', 'wcp_progress_bar_location_position_error', esc_html__( 'Progress Bar Locations Position must be Top or Bottom.', 'wcp' ) );
+
+            return get_option( 'wcp_progress_bar_location_position' );
+        }
+
+        return $input;
     }
 
     /** 
@@ -627,3 +658,10 @@ class WordCountPosts {
 }
 
 $WordCountPosts = new WordCountPosts();
+
+function wcp_do_activation_redirect( $plugin ) {
+    if( $plugin == plugin_basename( __FILE__ ) ) {
+        exit( wp_redirect( admin_url( 'options-general.php?page=word-count-posts-settings' ) ) );
+    }
+}
+add_action( 'activated_plugin', 'wcp_do_activation_redirect' );

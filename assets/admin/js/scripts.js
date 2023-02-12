@@ -88,26 +88,25 @@
 
                 if ( progressBarLocation.value !== '2' ) {
                     const siblingTr = [...parentTr.parentElement.children].filter(tr => tr !== parentTr && !tr.querySelector('[name=wcp_progress_bar],[name=wcp_progress_bar_thickness]') && !tr.querySelector('.wp-picker-container'));
-                    
-                    siblingTr[0].style.display = 'none';
+
+                    siblingTr.forEach(tr => tr.style.display = 'none');
                 }
             });
 
             // Select Custom Location
-            
             const parentTr = progressBarLocation.closest('tr');
             const siblingTr = [...parentTr.parentElement.children].filter(tr => tr !== parentTr && !tr.querySelector('[name=wcp_progress_bar],[name=wcp_progress_bar_thickness]') && !tr.querySelector('.wp-picker-container'));
             if ( progressBarLocation.value == '2' ) {
-                siblingTr[0].style.display = 'table-row';
+                siblingTr.forEach(tr => tr.style.display = 'table-row');
             } else {
-                siblingTr[0].style.display = 'none';
+                siblingTr.forEach(tr => tr.style.display = 'none');
             }
         
             progressBarLocation.addEventListener('change', () => {
                 if ( progressBarLocation.value == '2' ) {
-                    siblingTr[0].style.display = 'table-row';
+                    siblingTr.forEach(tr => tr.style.display = 'table-row');
                 } else {
-                    siblingTr[0].style.display = 'none';
+                    siblingTr.forEach(tr => tr.style.display = 'none');
                 }
             });
         });

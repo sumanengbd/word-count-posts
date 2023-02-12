@@ -204,8 +204,9 @@
 }
 
 .select2-container--default .select2-selection--multiple .select2-search--inline {
-    line-height: 2.1;
-    vertical-align: super;
+    line-height: 1;
+    vertical-align: 3px;
+    display: inline-block;
 }
 
 .select2-container--default .select2-selection--multiple .select2-selection__choice__remove span {
@@ -217,6 +218,6 @@
     width: 10rem;
 }
 
-#layout-settings table tbody tr:not(:has([name=wcp_progress_bar])) {
+#progress-settings table tbody tr:not(:has([name=wcp_progress_bar])) {
     display: none;
 }

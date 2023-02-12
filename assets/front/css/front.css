@@ -67,3 +67,8 @@
     height: 100%; 
     position: absolute; 
 }
+
+header.wp-block-template-part {
+    position: sticky;
+    top: 0;
+}

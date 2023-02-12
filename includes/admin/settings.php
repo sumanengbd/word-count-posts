@@ -1,6 +1,10 @@
 <?php
+if ( ! defined( 'ABSPATH' ) ) {
+	exit; // Exit if accessed directly.
+}
+
 add_settings_section( 'wcp_first_section', null, null, 'word-count-posts-settings' );
-add_settings_section( 'wcp_second_section', null, null, 'word-count-posts-settings-layout' );
+add_settings_section( 'wcp_second_section', null, null, 'word-count-posts-settings-progress' );
 
 /** 
  * Post Type Field
@@ -56,40 +60,47 @@ register_setting( 'wordcountposts', 'wcp_readtime', array( 'sanitize_callback' =
  * Progress Bar Field
  * 
  */
-add_settings_field( 'wcp_progress_bar', esc_html__( 'Progress Bar', 'wcp' ), array( $this, 'wcp_checkbox_html' ), 'word-count-posts-settings-layout', 'wcp_second_section', array( 'fieldName' => 'wcp_progress_bar', 'fieldID' => 'wcp_progress_bar' ) );
+add_settings_field( 'wcp_progress_bar', esc_html__( 'Progress Bar', 'wcp' ), array( $this, 'wcp_checkbox_html' ), 'word-count-posts-settings-progress', 'wcp_second_section', array( 'fieldName' => 'wcp_progress_bar', 'fieldID' => 'wcp_progress_bar' ) );
 register_setting( 'wordcountposts', 'wcp_progress_bar', array( 'sanitize_callback' => 'sanitize_text_field', 'default' => '0' ) );
 
 /** 
  * Color Picker Field
  * 
  */
-add_settings_field( 'wcp_progress_bar_background', esc_html__( 'Progress Bar Background', 'wcp' ), array( $this, 'wcp_color_picker_html' ), 'word-count-posts-settings-layout', 'wcp_second_section',  array( 'fieldName' => 'wcp_progress_bar_background', 'fieldID' => 'wcp_progress_bar_background' ) );
-register_setting( 'wordcountposts', 'wcp_progress_bar_background', array( 'sanitize_callback' => 'sanitize_text_field', 'default' => '#2271b1' ) );
+add_settings_field( 'wcp_progress_bar_background', esc_html__( 'Background', 'wcp' ), array( $this, 'wcp_color_picker_html' ), 'word-count-posts-settings-progress', 'wcp_second_section',  array( 'fieldName' => 'wcp_progress_bar_background', 'fieldID' => 'wcp_progress_bar_background' ) );
+register_setting( 'wordcountposts', 'wcp_progress_bar_background', array( 'sanitize_callback' => 'sanitize_text_field', 'default' => '#DDDDDD' ) );
 
 /** 
  * Color Picker Field
  * 
  */
-add_settings_field( 'wcp_progress_bar_foreground', esc_html__( 'Progress Bar Foreground', 'wcp' ), array( $this, 'wcp_color_picker_html' ), 'word-count-posts-settings-layout', 'wcp_second_section',  array( 'fieldName' => 'wcp_progress_bar_foreground', 'fieldID' => 'wcp_progress_bar_foreground' ) );
-register_setting( 'wordcountposts', 'wcp_progress_bar_foreground', array( 'sanitize_callback' => 'sanitize_text_field', 'default' => '#DDDDDD' ) );
+add_settings_field( 'wcp_progress_bar_foreground', esc_html__( 'Foreground', 'wcp' ), array( $this, 'wcp_color_picker_html' ), 'word-count-posts-settings-progress', 'wcp_second_section',  array( 'fieldName' => 'wcp_progress_bar_foreground', 'fieldID' => 'wcp_progress_bar_foreground' ) );
+register_setting( 'wordcountposts', 'wcp_progress_bar_foreground', array( 'sanitize_callback' => 'sanitize_text_field', 'default' => '#2271B1' ) );
 
 /** 
  * Progress Bar Locations Field
  * 
  */
-add_settings_field( 'wcp_progress_bar_thickness', esc_html__( 'Progress Bar Thickness', 'wcp' ), array( $this, 'wcp_progress_bar_thickness_html' ), 'word-count-posts-settings-layout', 'wcp_second_section' );
+add_settings_field( 'wcp_progress_bar_thickness', esc_html__( 'Thickness', 'wcp' ), array( $this, 'wcp_progress_bar_thickness_html' ), 'word-count-posts-settings-progress', 'wcp_second_section' );
 register_setting( 'wordcountposts', 'wcp_progress_bar_thickness', array( 'sanitize_callback' => 'sanitize_text_field', 'default' => '2' ) );
 
 /** 
  * Progress Bar Locations Field
  * 
  */
-add_settings_field( 'wcp_progress_bar_location', esc_html__( 'Progress Bar Locations', 'wcp' ), array( $this, 'wcp_progress_bar_location_html' ), 'word-count-posts-settings-layout', 'wcp_second_section' );
+add_settings_field( 'wcp_progress_bar_location', esc_html__( 'Locations', 'wcp' ), array( $this, 'wcp_progress_bar_location_html' ), 'word-count-posts-settings-progress', 'wcp_second_section' );
 register_setting( 'wordcountposts', 'wcp_progress_bar_location', array( 'sanitize_callback' => array( $this, 'wcp_sanitize_progress_bar_location' ), 'default' => '0' ) );
 
 /** 
  * Progress Bar Locations Field
  * 
  */
-add_settings_field( 'wcp_progress_bar_location_class', esc_html__( 'Progress Bar Locations Class', 'wcp' ), array( $this, 'wcp_progress_bar_location_class_html' ), 'word-count-posts-settings-layout', 'wcp_second_section' );
+add_settings_field( 'wcp_progress_bar_location_class', esc_html__( 'Locations Custom', 'wcp' ), array( $this, 'wcp_progress_bar_location_class_html' ), 'word-count-posts-settings-progress', 'wcp_second_section' );
 register_setting( 'wordcountposts', 'wcp_progress_bar_location_class', array( 'sanitize_callback' => 'sanitize_text_field', 'default' => '' ) );
+
+/** 
+ * Progress Bar Position Field
+ * 
+ */
+add_settings_field( 'wcp_progress_bar_location_position', esc_html__( 'Locations Position', 'wcp' ), array( $this, 'wcp_progress_bar_location_position_html' ), 'word-count-posts-settings-progress', 'wcp_second_section' );
+register_setting( 'wordcountposts', 'wcp_progress_bar_location_position', array( 'sanitize_callback' => array( $this, 'wcp_sanitize_progress_bar_location_position' ), 'default' => '0' ) );
